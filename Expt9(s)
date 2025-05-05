@@ -1,0 +1,157 @@
+//activity.xml
+package com.example.exp9_storage;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import org.w3c.dom.Text;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+
+    EditText txt;
+
+    TextView output;
+    String str = "example.txt";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        output = findViewById(R.id.output);
+    }
+
+    public void Save(View view) {
+        txt = findViewById(R.id.edt);
+        String data = txt.getText().toString();
+        try {
+            FileOutputStream fos = openFileOutput(str,MODE_PRIVATE);
+            fos.write(data.getBytes());
+            fos.close();
+            String dir = getFilesDir()+"/"+str;
+            Toast.makeText(this,"Data Saved in "+dir , Toast.LENGTH_SHORT).show();
+            txt.setText("");
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void show(View view) {
+        try {
+            FileInputStream fis = openFileInput(str);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader br = new BufferedReader(isr);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine())!=null)
+            {
+                sb.append(line).append("\n");
+            }
+            output.setText(sb.toString());
+            br.close();
+            isr.close();
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+}
+
+//Java Code
+package com.example.exp9_storage;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import org.w3c.dom.Text;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+
+    EditText txt;
+
+    TextView output;
+    String str = "example.txt";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        output = findViewById(R.id.output);
+    }
+
+    public void Save(View view) {
+        txt = findViewById(R.id.edt);
+        String data = txt.getText().toString();
+        try {
+            FileOutputStream fos = openFileOutput(str,MODE_PRIVATE);
+            fos.write(data.getBytes());
+            fos.close();
+            String dir = getFilesDir()+"/"+str;
+            Toast.makeText(this,"Data Saved in "+dir , Toast.LENGTH_SHORT).show();
+            txt.setText("");
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void show(View view) {
+        try {
+            FileInputStream fis = openFileInput(str);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader br = new BufferedReader(isr);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine())!=null)
+            {
+                sb.append(line).append("\n");
+            }
+            output.setText(sb.toString());
+            br.close();
+            isr.close();
+        }  catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+}
