@@ -1,0 +1,213 @@
+activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sample Media Player"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp"/>
+
+    <!-- Media Progress Bar -->
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"/>
+
+    <!-- Status TextView -->
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Status: Stopped"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:paddingBottom="10dp"/>
+
+    <!-- Play Button -->
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Play"/>
+
+    <!-- Pause Button -->
+    <Button
+        android:id="@+id/pauseButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pause"
+        android:layout_marginTop="10dp"/>
+
+    <!-- Stop Button -->
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:layout_marginTop="10dp"/>
+
+</LinearLayout>
+
+//MainActivity.java
+
+package com.example.expt8;
+
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
+import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    private MediaPlayer mediaPlayer;
+    private SeekBar seekBar;
+    private TextView statusText;
+    private Handler handler = new Handler();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Initialize UI Elements
+        Button playButton = findViewById(R.id.playButton);
+        Button pauseButton = findViewById(R.id.pauseButton);
+        Button stopButton = findViewById(R.id.stopButton);
+        seekBar = findViewById(R.id.seekBar);
+        statusText = findViewById(R.id.statusText);
+
+        // Initialize MediaPlayer
+        mediaPlayer = MediaPlayer.create(this, R.raw.sample_audio);
+        seekBar.setMax(mediaPlayer.getDuration());
+
+        // Update SeekBar Progress
+        handler.postDelayed(updateSeekBar, 100);
+
+        // Play Button Listener
+        playButton.setOnClickListener(v -> {
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                statusText.setText("Status: Playing");
+                Toast.makeText(MainActivity.this, "Playing Audio", Toast.LENGTH_SHORT).show();
+                updateSeekBarProgress();
+            }
+        });
+
+        // Pause Button Listener
+        pauseButton.setOnClickListener(v -> {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                statusText.setText("Status: Paused");
+                Toast.makeText(MainActivity.this, "Audio Paused", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Stop Button Listener
+        stopButton.setOnClickListener(v -> {
+            if (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0) {
+                mediaPlayer.stop();
+                mediaPlayer.prepareAsync();
+                statusText.setText("Status: Stopped");
+                seekBar.setProgress(0);
+                Toast.makeText(MainActivity.this, "Audio Stopped", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // SeekBar Listener for manual seeking
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    mediaPlayer.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+
+    // Runnable to update SeekBar
+    private Runnable updateSeekBar = new Runnable() {
+        @Override
+        public void run() {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                handler.postDelayed(this, 500);
+            }
+        }
+    };
+
+    private void updateSeekBarProgress() {
+        handler.postDelayed(updateSeekBar, 500);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        handler.removeCallbacks(updateSeekBar);
+    }
+}
+
+// AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Storage permission (Deprecated in Android 13+) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Required for Android 13+ if accessing media files -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MediaPlayer"
+    tools:targetApi="31">
+
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"> <!-- Explicitly required for Android 12+ -->
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+
+</application>
+
+    </manifest>
