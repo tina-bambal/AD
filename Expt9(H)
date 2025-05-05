@@ -1,0 +1,270 @@
+//XML File
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="20dp"
+    android:background="@android:color/white"
+    tools:context=".MainActivity">
+
+    <!-- Input Field -->
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:hint="Enter data"
+        android:inputType="text"
+        android:minHeight="50dp"
+        android:padding="14dp"
+        android:textSize="18sp"
+        android:background="@android:drawable/editbox_background"
+        android:textColor="#212121"
+        android:textColorHint="#757575"
+        android:importantForAutofill="yes"
+        tools:ignore="HardcodedText" />
+
+    <!-- Save to Internal Storage Button -->
+    <Button
+        android:id="@+id/saveInternalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save to Internal Storage"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:backgroundTint="#FF7043"
+        android:padding="14dp"
+        android:layout_marginBottom="12dp"
+        tools:ignore="HardcodedText" />
+
+    <!-- Save to External Storage Button -->
+    <Button
+        android:id="@+id/saveExternalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save to External Storage"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:backgroundTint="#66BB6A"
+        android:padding="14dp"
+        android:layout_marginBottom="12dp"
+        tools:ignore="HardcodedText" />
+
+    <!-- Load Data Button -->
+    <Button
+        android:id="@+id/loadButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Load Data"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:backgroundTint="#42A5F5"
+        android:padding="14dp"
+        tools:ignore="HardcodedText" />
+
+</LinearLayout>
+
+//Java code
+package com.example.expt9;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.os.Environment;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import java.io.File;
+import java.io.IOException;
+
+public class MainActivity extends AppCompatActivity {
+
+    private EditText editText;
+    private static final int PERMISSION_REQUEST_CODE = 100;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    String data = editText.getText().toString();
+                    saveDataExternal(data);
+                } else {
+                    Toast.makeText(this, "Permission denied to write to external storage.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        editText = findViewById(R.id.editText);
+        Button saveInternalButton = findViewById(R.id.saveInternalButton);
+        Button saveExternalButton = findViewById(R.id.saveExternalButton);
+        Button loadButton = findViewById(R.id.loadButton);
+
+        saveInternalButton.setOnClickListener(v -> {
+            String data = editText.getText().toString();
+            saveDataInternal(data);
+        });
+
+        saveExternalButton.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES);
+            } else {
+                String data = editText.getText().toString();
+                saveDataExternal(data);
+            }
+        });
+
+        loadButton.setOnClickListener(v -> loadData());
+    }
+
+    private void saveDataInternal(String data) {
+        try {
+            File file = new File(getFilesDir(), "data.txt");
+            FileStorageHelper.writeToFile(file, data);
+            Toast.makeText(this, "Data saved to internal storage!", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error saving data.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveDataExternal(String data) {
+        if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
+            File file = new File(getExternalFilesDir(null), "data.txt");
+            try {
+                FileStorageHelper.writeToFile(file, data);
+                Toast.makeText(this, "Data saved to external storage!", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error saving data.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "External storage is not available.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void loadData() {
+        File internalFile = new File(getFilesDir(), "data.txt");
+        File externalFile = null;
+
+        // Check if external storage is available
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            externalFile = new File(getExternalFilesDir(null), "data.txt");
+        }
+
+        // Prioritize external storage if both exist
+        File fileToRead = null;
+        String storageType = "";
+
+        if (externalFile != null && externalFile.exists()) {
+            fileToRead = externalFile;
+            storageType = "External Storage";
+        } else if (internalFile.exists()) {
+            fileToRead = internalFile;
+            storageType = "Internal Storage";
+        } else {
+            Toast.makeText(this, "No saved data found!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Read data
+        String data = FileStorageHelper.readFromFile(fileToRead);
+
+        if (data == null || data.trim().isEmpty()) {
+            Toast.makeText(this, "File is empty!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Display the loaded data
+        editText.setText(data);
+        Toast.makeText(this, "Loaded from " + storageType, Toast.LENGTH_LONG).show();
+    }
+
+}
+
+
+//FileStorageHelper.java
+package com.example.expt9;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class FileStorageHelper {
+
+    // Write data to a file
+    public static void writeToFile(File file, String data) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(data.getBytes());
+        }
+    }
+
+    // Read data from a file
+    public static String readFromFile(File file) {
+        if (!file.exists()) {
+            return "";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        try (FileInputStream fis = new FileInputStream(file)) {
+            int ch;
+            while ((ch = fis.read()) != -1) {
+                stringBuilder.append((char) ch);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Debugging Log
+        String result = stringBuilder.toString();
+        System.out.println("Read from file: " + result);
+        return result;
+    }
+
+}
+
+//AndroidManifest
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Exp_9"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
+
