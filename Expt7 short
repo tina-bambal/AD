@@ -1,0 +1,97 @@
+<!-- activity_main.xml -->
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <com.denzcoskun.imageslider.ImageSlider
+        android:id="@+id/image_slider"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:iss_auto_cycle="true"
+        app:iss_period="1000"
+        app:iss_placeholder="@drawable/ic_launcher_foreground"
+        app:iss_error_image="@drawable/ic_launcher_background"
+        app:iss_delay="0" />
+</LinearLayout>
+
+
+
+<!-- MainActivity.java -->
+package com.example.expt7;
+
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+import com.denzcoskun.imageslider.ImageSlider;
+import com.denzcoskun.imageslider.models.SlideModel;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    ImageSlider imageSlider;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        imageSlider = findViewById(R.id.image_slider);
+
+        ArrayList<SlideModel> imageList = new ArrayList<>();
+        imageList.add(new SlideModel(R.drawable.one, null));
+        imageList.add(new SlideModel(R.drawable.two, null));
+        imageList.add(new SlideModel(R.drawable.three, null));
+        imageList.add(new SlideModel(R.drawable.four, null));
+        imageList.add(new SlideModel(R.drawable.five, null));
+        imageList.add(new SlideModel(R.drawable.six, null));
+
+        imageSlider.setImageList(imageList);
+    }
+}
+
+<!--build.gradle.kts(app) -->
+plugins {
+    id("com.android.application")
+}
+
+android {
+    namespace = "com.example.expt7"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.example.expt7"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.github.denzcoskun:ImageSlideshow:0.1.0")
+}
+
